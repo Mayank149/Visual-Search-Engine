@@ -1,4 +1,5 @@
 from fastapi import FastAPI, UploadFile, File
+from fastapi.staticfiles import StaticFiles
 import numpy as np
 import faiss
 import pickle
@@ -9,6 +10,7 @@ from PIL import Image
 import io
 
 app = FastAPI()
+app.mount("/images", StaticFiles(directory="dataset/images"), name="images")
 index = faiss.read_index("faiss_index.bin")
 with open("image_paths.pkl", "rb") as f:
     image_paths = pickle.load(f)
@@ -47,7 +49,7 @@ async def search(file: UploadFile = File(...)):
     k = 5
     distances, indices = index.search(query_vector, k)
 
-    results = [image_paths[i] for i in indices[0]]
+    results = [f"http://127.0.0.1:8000/images/{image_paths[i].split("/")[-1]}" for i in indices[0]]
 
     return {"results" : results}
 
